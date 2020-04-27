@@ -10,9 +10,10 @@ public class Player : MonoBehaviour
 	private Animator _myAnimator;
 
 	//Config
-	[SerializeField] private float runSpeed = 1f;
+	[SerializeField] private float runSpeed = 5f;
+	[SerializeField] private float jumpSpeed = 5f;
 	private static readonly int Running = Animator.StringToHash("Running");
-	private const string Horizontal = "Horizontal";
+
 
 	//Messages
 	
@@ -29,17 +30,28 @@ public class Player : MonoBehaviour
 	private void Update()
 	{
 		Run();
+		Jump();
 		FlipSprite();
 	}
 
 	private void Run()
 	{
-		float controlThrow = CrossPlatformInputManager.GetAxis(Horizontal); //value is -1 to +1
+		float controlThrow = CrossPlatformInputManager.GetAxis("Horizontal"); //value is -1 to +1
 		var playerVelocity = new Vector2(controlThrow * runSpeed, _myRigidBody.velocity.y);
 		_myRigidBody.velocity = playerVelocity;
 
 		bool playerHasHorizontalSpeed = PlayerHasHorizontalSpeed();
 		_myAnimator.SetBool(Running, playerHasHorizontalSpeed);
+	}
+
+	private void Jump()
+	{
+		if (CrossPlatformInputManager.GetButtonDown("Jump"))
+		{
+			Vector2 jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
+
+			_myRigidBody.velocity += jumpVelocityToAdd;
+		}
 	}
 
 	private void FlipSprite()

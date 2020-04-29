@@ -3,23 +3,16 @@ using UnityStandardAssets.CrossPlatformInput;
 
 public class Player : MonoBehaviour
 {
-	//State
-	
-	//Cached component references
-	private Rigidbody2D _myRigidBody;
-	private Animator _myAnimator;
-	private Collider2D _myCollider;
-
-	//Config
-	[SerializeField] private float runSpeed = 5f;
-	[SerializeField] private float jumpSpeed = 5f;
-	[SerializeField] private float climbSpeed = 5f;
 	private static readonly int Running = Animator.StringToHash("Running");
 	private static readonly int Climbing = Animator.StringToHash("Climbing");
-
-	//Messages
 	
-	//Methods
+	private Animator _myAnimator;
+	private Rigidbody2D _myRigidBody;
+	private Collider2D _myCollider;
+
+	[SerializeField] private float climbSpeed = 5f;
+	[SerializeField] private float jumpSpeed = 5f;
+	[SerializeField] private float runSpeed = 5f;
 
 	// Start is called before the first frame update
 	private void Start()
@@ -35,10 +28,10 @@ public class Player : MonoBehaviour
 	{
 		Run();
 		Jump();
-		Climb();
+		ClimbLadder();
 		FlipSprite();
 	}
-	
+
 
 	private void Run()
 	{
@@ -49,37 +42,37 @@ public class Player : MonoBehaviour
 		bool playerHasHorizontalSpeed = PlayerHasHorizontalSpeed();
 		_myAnimator.SetBool(Running, playerHasHorizontalSpeed);
 	}
-	
-	private void Climb()
-	{
-		if (_myCollider.IsTouchingLayers(LayerMask.GetMask("Default", "Ladder")))
-		{
-			float controlThrow = CrossPlatformInputManager.GetAxis("Vertical"); //value is -1 to +1
-			var playerVelocity = new Vector2(_myRigidBody.velocity.x, controlThrow * climbSpeed);
-			_myRigidBody.velocity = playerVelocity;
-			bool playerHasVerticalSpeed = PlayerHasVerticalSpeed();
-			_myAnimator.SetBool(Climbing, playerHasVerticalSpeed);
-		}
-		else
-		{
-			_myAnimator.SetBool(Climbing, false);
 
+	private void ClimbLadder()
+	{
+		if (!_myCollider.IsTouchingLayers(LayerMask.GetMask("Default", "Climbing")))
+		{
+			return;
 		}
+
+		float controlThrow = CrossPlatformInputManager.GetAxis("Vertical"); //value is -1 to +1
+		var climbVelocity = new Vector2(_myRigidBody.velocity.x, controlThrow * climbSpeed);
+		_myRigidBody.velocity = climbVelocity;
+		bool playerHasVerticalSpeed = PlayerHasVerticalSpeed();
+		_myAnimator.SetBool(Climbing, playerHasVerticalSpeed);
 	}
 
 
 	private void Jump()
 	{
-		if (!_myCollider.IsTouchingLayers(LayerMask.GetMask("Default", "Ground"))) return;
-		
+		if (!_myCollider.IsTouchingLayers(LayerMask.GetMask("Default", "Ground")))
+		{
+			return;
+		}
+
 		if (CrossPlatformInputManager.GetButtonDown("Jump"))
 		{
-			Vector2 jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
+			var jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
 
 			_myRigidBody.velocity += jumpVelocityToAdd;
 		}
 	}
-	
+
 
 	private void FlipSprite()
 	{
@@ -93,11 +86,11 @@ public class Player : MonoBehaviour
 
 	private bool PlayerHasHorizontalSpeed()
 	{
-		return  Mathf.Abs(_myRigidBody.velocity.x) > Mathf.Epsilon;
+		return Mathf.Abs(_myRigidBody.velocity.x) > Mathf.Epsilon;
 	}
-	
+
 	private bool PlayerHasVerticalSpeed()
 	{
-		return  Mathf.Abs(_myRigidBody.velocity.y) > Mathf.Epsilon;
+		return Mathf.Abs(_myRigidBody.velocity.y) > Mathf.Epsilon;
 	}
 }

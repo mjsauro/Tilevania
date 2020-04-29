@@ -3,24 +3,31 @@ using UnityStandardAssets.CrossPlatformInput;
 
 public class Player : MonoBehaviour
 {
+	//constants and static variables
 	private static readonly int Running = Animator.StringToHash("Running");
 	private static readonly int Climbing = Animator.StringToHash("Climbing");
-	
-	private Animator _myAnimator;
-	private Rigidbody2D _myRigidBody;
-	private Collider2D _myCollider;
+	private float _gravityScaleAtStart;
 
+	//cached component references
+	private Animator _myAnimator;
+	private Collider2D _myCollider;
+	private Rigidbody2D _myRigidBody;
+
+	//config
 	[SerializeField] private float climbSpeed = 5f;
 	[SerializeField] private float jumpSpeed = 5f;
 	[SerializeField] private float runSpeed = 5f;
+	
+	//state 
+	private bool isAlive = true;
 
 	// Start is called before the first frame update
 	private void Start()
 	{
 		_myRigidBody = GetComponent<Rigidbody2D>();
+		_gravityScaleAtStart = _myRigidBody.gravityScale;
 		_myAnimator = GetComponent<Animator>();
 		_myCollider = GetComponent<Collider2D>();
-		Debug.Log(LayerMask.GetMask("Default", "Ground"));
 	}
 
 	// Update is called once per frame
@@ -47,12 +54,16 @@ public class Player : MonoBehaviour
 	{
 		if (!_myCollider.IsTouchingLayers(LayerMask.GetMask("Default", "Climbing")))
 		{
+			_myAnimator.SetBool(Climbing, false);
+			_myRigidBody.gravityScale = _gravityScaleAtStart;
 			return;
 		}
 
 		float controlThrow = CrossPlatformInputManager.GetAxis("Vertical"); //value is -1 to +1
 		var climbVelocity = new Vector2(_myRigidBody.velocity.x, controlThrow * climbSpeed);
 		_myRigidBody.velocity = climbVelocity;
+		_myRigidBody.gravityScale = 0f;
+
 		bool playerHasVerticalSpeed = PlayerHasVerticalSpeed();
 		_myAnimator.SetBool(Climbing, playerHasVerticalSpeed);
 	}
@@ -65,12 +76,14 @@ public class Player : MonoBehaviour
 			return;
 		}
 
-		if (CrossPlatformInputManager.GetButtonDown("Jump"))
+		if (!CrossPlatformInputManager.GetButtonDown("Jump"))
 		{
-			var jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
-
-			_myRigidBody.velocity += jumpVelocityToAdd;
+			return;
 		}
+
+		var jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
+
+		_myRigidBody.velocity += jumpVelocityToAdd;
 	}
 
 
